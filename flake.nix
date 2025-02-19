@@ -23,5 +23,30 @@
     preallocate-contents = true;
     sync-before-registering = true;
   };
-  outputs = { ... } : { };
+  outputs = { pkgs, ... } : let
+    availableHosts = builtins.attrNames(
+      pkgs.lib.filterAttrs(
+        _ : type : type == "directory"
+      ) ( builtins.readDir ./hosts )
+    );
+
+    # Apparently dynamic system detection with `builtins.currentSystem`
+    #  "breaks hermetic evaluation". So enjoy this hardcoded platform instead
+    # See: https://github.com/NixOS/nix/issues/3843#issuecomment-2589248337
+    currentPlatform = "x86_64-linux";
+  in {
+    nixosConfigurations = builtins.listToAttrs(
+      builtins.map( hostname : {
+        name = hostname;
+        value = pkgs.lib.nixosSystem {
+          modules = [
+            ./shared/modules
+            ./hosts/${hostname}
+          ];
+          specialArgs = { };
+          system = currentPlatform;
+        };
+      } ) availableHosts
+    );
+  };
 }
