@@ -12,10 +12,10 @@
     };
   };
   nixConfig = {
-    abort-on-warn = true;
+    abort-on-warn = false;
     accept-flake-config = true;
     allow-dirty = false;
-    connect-timeout = 30;
+    connect-timeout = 60;
     fallback = true;
     keep-build-log = false;
     keep-derivations = false;
@@ -43,7 +43,9 @@
             ./shared/modules
             ./hosts/${hostname}
           ];
-          specialArgs = { };
+          specialArgs = {
+            inherit hostname;
+          };
           system = currentPlatform;
         };
       } ) availableHosts
